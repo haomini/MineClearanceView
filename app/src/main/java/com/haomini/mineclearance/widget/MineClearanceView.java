@@ -1,20 +1,28 @@
 package com.haomini.mineclearance.widget;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.annotation.DrawableRes;
+import androidx.annotation.IdRes;
 import androidx.annotation.Nullable;
+
+import com.haomini.mineclearance.R;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 /**
  * @author haomini
@@ -44,6 +52,12 @@ public class MineClearanceView extends View {
 
     private boolean isOverGame;
 
+    private int indexOfPic;
+
+    private Bitmap bitmap;
+
+    private boolean isFunGame;
+
     public MineClearanceView(Context context) {
         super(context);
         init();
@@ -62,6 +76,24 @@ public class MineClearanceView extends View {
     private void init() {
         initPieces(bombNum);
 
+        if (isFunGame) {
+            indexOfPic = (int) Math.floor(Math.random() * 3);
+            @DrawableRes int id = R.drawable.chenhe;
+            switch (indexOfPic) {
+                case 0:
+                    id = R.drawable.chenhe;
+                    break;
+                case 1:
+                    id = R.drawable.huangxiaoming;
+                    break;
+                case 2:
+                    id = R.drawable.zhoujielun;
+                    break;
+                default:
+            }
+            bitmap = BitmapFactory.decodeResource(getResources(), id);
+        }
+
         mBoxPaint.setColor(Color.YELLOW);
     }
 
@@ -79,6 +111,11 @@ public class MineClearanceView extends View {
 
         float dividerWidth = square / 50.0F + 1;
 
+        // fixme
+        if (isFunGame) {
+            canvas.drawBitmap(bitmap, null, new Rect(0, 0, getWidth(), getHeight()), null);
+        }
+
         for (int i = 0; i < RAW_BOX; i++) {
             for (int j = 0; j < COLUMN_BOX; j++) {
 
@@ -95,7 +132,7 @@ public class MineClearanceView extends View {
                     canvas.drawRect(rectF, mBoxPaint);
                 } else if (mPieces[i][j] == ZERO_OPEN_STATE) {
                     // 空白打开后
-                    mBoxPaint.setColor(Color.WHITE);
+                    mBoxPaint.setColor(isFunGame ? Color.TRANSPARENT : Color.WHITE);
                     canvas.drawRect(rectF, mBoxPaint);
                 } else if (mPieces[i][j] < 0 && mPieces[i][j] > BOMB_OPEN_STATE) {
                     // 普通打开后
@@ -308,6 +345,22 @@ public class MineClearanceView extends View {
         }
     }
 
+    public void checkWin(String name) {
+        checkWin();
+        if (name.contains("陈赫") && indexOfPic == 0) {
+            isOverGame = true;
+            Toast.makeText(getContext(), "You win!", Toast.LENGTH_SHORT).show();
+        } else if (name.contains("黄晓明") && indexOfPic == 1) {
+            isOverGame = true;
+            Toast.makeText(getContext(), "You win!", Toast.LENGTH_SHORT).show();
+        } else if (name.contains("周杰伦") && indexOfPic == 2) {
+            isOverGame = true;
+            Toast.makeText(getContext(), "You win!", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getContext(), "You guess wrong!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     /**
      * 根据点击位置获取点击的格子
      */
@@ -323,9 +376,10 @@ public class MineClearanceView extends View {
      *
      * @param bombNum 设置炸弹数
      */
-    public void play(int bombNum) {
+    public void play(int bombNum, boolean isFunGame) {
         isOverGame = false;
         this.bombNum = bombNum;
+        this.isFunGame = isFunGame;
         init();
         invalidate();
     }

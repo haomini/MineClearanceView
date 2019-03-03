@@ -22,4 +22,9 @@ public class SplashActivity extends AppCompatActivity {
     public void onNormalClick(View v) {
         startActivity(new Intent(SplashActivity.this, MainActivity.class));
     }
+
+    public void onFunClick(View v) {
+        startActivity(new Intent(SplashActivity.this, MainActivity.class)
+                .putExtra("boolean", true));
+    }
 }
