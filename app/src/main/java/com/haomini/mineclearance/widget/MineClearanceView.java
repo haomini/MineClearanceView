@@ -44,6 +44,8 @@ public class MineClearanceView extends View {
 
     private final Paint mBoxPaint = new Paint();
 
+    private RectF mRectF = new RectF();
+
     private int[][] mPieces = new int[RAW_BOX][COLUMN_BOX];
 
     private int square;
@@ -111,39 +113,39 @@ public class MineClearanceView extends View {
 
         float dividerWidth = square / 50.0F + 1;
 
-        // fixme
         if (isFunGame) {
-            canvas.drawBitmap(bitmap, null, new Rect(0, 0, getWidth(), getHeight()), null);
+            mRectF.set(0, 0, getWidth(), getHeight());
+            canvas.drawBitmap(bitmap, null, mRectF, null);
         }
 
         for (int i = 0; i < RAW_BOX; i++) {
             for (int j = 0; j < COLUMN_BOX; j++) {
 
-                // fixme
-                RectF rectF = new RectF(
+                mRectF.set(
                         i * square + dividerWidth,
                         j * square + dividerWidth,
                         (i + 1) * square - dividerWidth,
                         (j + 1) * square - dividerWidth);
 
+
                 if (mPieces[i][j] >= 0) {
                     // 未打开过
                     mBoxPaint.setColor(Color.YELLOW);
-                    canvas.drawRect(rectF, mBoxPaint);
+                    canvas.drawRect(mRectF, mBoxPaint);
                 } else if (mPieces[i][j] == ZERO_OPEN_STATE) {
                     // 空白打开后
                     mBoxPaint.setColor(isFunGame ? Color.TRANSPARENT : Color.WHITE);
-                    canvas.drawRect(rectF, mBoxPaint);
+                    canvas.drawRect(mRectF, mBoxPaint);
                 } else if (mPieces[i][j] < 0 && mPieces[i][j] > BOMB_OPEN_STATE) {
                     // 普通打开后
                     mBoxPaint.setColor(Color.RED);
                     mBoxPaint.setTextAlign(Paint.Align.CENTER);
                     mBoxPaint.setTextSize(square - 2 * dividerWidth);
-                    canvas.drawText(String.valueOf(Math.abs(mPieces[i][j])), rectF.left + square / 2.0F, rectF.bottom + dividerWidth, mBoxPaint);
+                    canvas.drawText(String.valueOf(Math.abs(mPieces[i][j])), mRectF.left + square / 2.0F, mRectF.bottom + dividerWidth, mBoxPaint);
                 } else {
                     // 炸弹打开后
                     mBoxPaint.setColor(Color.RED);
-                    canvas.drawRect(rectF, mBoxPaint);
+                    canvas.drawRect(mRectF, mBoxPaint);
                 }
             }
         }
