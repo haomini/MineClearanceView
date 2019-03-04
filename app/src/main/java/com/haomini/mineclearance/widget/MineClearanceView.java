@@ -1,28 +1,19 @@
 package com.haomini.mineclearance.widget;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
-import androidx.annotation.DrawableRes;
-import androidx.annotation.IdRes;
 import androidx.annotation.Nullable;
-
-import com.haomini.mineclearance.R;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 /**
  * @author haomini
@@ -30,27 +21,19 @@ import java.util.Random;
  */
 public class MineClearanceView extends View {
 
-    public static final int DEFAULT_BOMBS = 20;
+    private int rowCount = MineClearanceConstant.DEFAULT_RAW_BOX;
 
-    private final int RAW_BOX = 14;
+    private int columnCount = MineClearanceConstant.DEFAULT_COLUMN_BOX;
 
-    private final int COLUMN_BOX = 16;
-
-    private final int BOMB_STATE = 9;
-
-    private final int BOMB_OPEN_STATE = -9;
-
-    private final int ZERO_OPEN_STATE = -12;
+    private int bombNum = MineClearanceConstant.DEFAULT_BOMBS;
 
     private final Paint mBoxPaint = new Paint();
 
     private RectF mRectF = new RectF();
 
-    private int[][] mPieces = new int[RAW_BOX][COLUMN_BOX];
+    private int[][] mPieces;
 
     private int square;
-
-    private int bombNum = DEFAULT_BOMBS;
 
     private boolean isOverGame;
 
@@ -81,8 +64,8 @@ public class MineClearanceView extends View {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
         final int width = getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec);
-        square = (int) Math.floor(width / (float) RAW_BOX);
-        setMeasuredDimension(widthMeasureSpec, MeasureSpec.makeMeasureSpec(square * COLUMN_BOX, MeasureSpec.EXACTLY));
+        square = (int) Math.floor(width / (float) rowCount);
+        setMeasuredDimension(widthMeasureSpec, MeasureSpec.makeMeasureSpec(square * columnCount, MeasureSpec.EXACTLY));
     }
 
     @Override
@@ -91,8 +74,8 @@ public class MineClearanceView extends View {
 
         float dividerWidth = square / 50.0F + 1;
 
-        for (int i = 0; i < RAW_BOX; i++) {
-            for (int j = 0; j < COLUMN_BOX; j++) {
+        for (int i = 0; i < rowCount; i++) {
+            for (int j = 0; j < columnCount; j++) {
 
                 mRectF.set(
                         i * square + dividerWidth,
@@ -105,11 +88,11 @@ public class MineClearanceView extends View {
                     // 未打开过
                     mBoxPaint.setColor(Color.YELLOW);
                     canvas.drawRect(mRectF, mBoxPaint);
-                } else if (mPieces[i][j] == ZERO_OPEN_STATE) {
+                } else if (mPieces[i][j] == MineClearanceConstant.ZERO_OPEN_STATE) {
                     // 空白打开后
                     mBoxPaint.setColor(Color.WHITE);
                     canvas.drawRect(mRectF, mBoxPaint);
-                } else if (mPieces[i][j] < 0 && mPieces[i][j] > BOMB_OPEN_STATE) {
+                } else if (mPieces[i][j] < 0 && mPieces[i][j] > MineClearanceConstant.BOMB_OPEN_STATE) {
                     // 普通打开后
                     mBoxPaint.setColor(Color.RED);
                     mBoxPaint.setTextAlign(Paint.Align.CENTER);
@@ -134,16 +117,16 @@ public class MineClearanceView extends View {
                 int[] location = getPieceLocation(event.getX(), event.getY());
                 if (mPieces[location[0]][location[1]] == 0) {
                     // 空白打开
-                    mPieces[location[0]][location[1]] = ZERO_OPEN_STATE;
+                    mPieces[location[0]][location[1]] = MineClearanceConstant.ZERO_OPEN_STATE;
                     scanBlankConn(location[0], location[1]);
                     checkWin();
                     invalidate();
-                } else if (mPieces[location[0]][location[1]] != BOMB_STATE && mPieces[location[0]][location[1]] > 0) {
+                } else if (mPieces[location[0]][location[1]] != MineClearanceConstant.BOMB_STATE && mPieces[location[0]][location[1]] > 0) {
                     // 普通数字打开
                     mPieces[location[0]][location[1]] = -mPieces[location[0]][location[1]];
                     checkWin();
                     invalidate();
-                } else if (mPieces[location[0]][location[1]] == BOMB_STATE) {
+                } else if (mPieces[location[0]][location[1]] == MineClearanceConstant.BOMB_STATE) {
                     // 炸弹打开
                     overGame();
                     isOverGame = true;
@@ -160,16 +143,19 @@ public class MineClearanceView extends View {
      */
     private void initPieces(int bombNum) {
 
+        if (mPieces == null) {
+            mPieces = new int[rowCount][columnCount];
+        }
         // 重置所有状态为0
-        for (int i = 0; i < RAW_BOX; i++) {
-            for (int j = 0; j < COLUMN_BOX; j++) {
+        for (int i = 0; i < rowCount; i++) {
+            for (int j = 0; j < columnCount; j++) {
                 mPieces[i][j] = 0;
             }
         }
 
         // 洗牌
-        List<Integer> randomSeeds = new ArrayList<>(RAW_BOX * COLUMN_BOX);
-        for (int i = 0; i < RAW_BOX * COLUMN_BOX; i++) {
+        List<Integer> randomSeeds = new ArrayList<>(rowCount * columnCount);
+        for (int i = 0; i < rowCount * columnCount; i++) {
             randomSeeds.add(i);
         }
         Collections.shuffle(randomSeeds);
@@ -177,13 +163,13 @@ public class MineClearanceView extends View {
         Collections.sort(limitSeeds);
         // 标记所有棋子
         for (int i = 0; i < bombNum; i++) {
-            final int column = limitSeeds.get(i) / RAW_BOX;
-            final int raw = limitSeeds.get(i) % RAW_BOX;
-            mPieces[raw][column] = BOMB_STATE;
+            final int column = limitSeeds.get(i) / rowCount;
+            final int raw = limitSeeds.get(i) % rowCount;
+            mPieces[raw][column] = MineClearanceConstant.BOMB_STATE;
         }
-        for (int i = 0; i < RAW_BOX; i++) {
-            for (int j = 0; j < COLUMN_BOX; j++) {
-                if (mPieces[i][j] != BOMB_STATE) {
+        for (int i = 0; i < rowCount; i++) {
+            for (int j = 0; j < columnCount; j++) {
+                if (mPieces[i][j] != MineClearanceConstant.BOMB_STATE) {
                     mPieces[i][j] = calcPieceGrade(i, j);
                 }
             }
@@ -194,10 +180,10 @@ public class MineClearanceView extends View {
      * 游戏结束, 显示所有 雷
      */
     private void overGame() {
-        for (int i = 0; i < RAW_BOX; i++) {
-            for (int j = 0; j < COLUMN_BOX; j++) {
-                if (mPieces[i][j] == BOMB_STATE) {
-                    mPieces[i][j] = BOMB_OPEN_STATE;
+        for (int i = 0; i < rowCount; i++) {
+            for (int j = 0; j < columnCount; j++) {
+                if (mPieces[i][j] == MineClearanceConstant.BOMB_STATE) {
+                    mPieces[i][j] = MineClearanceConstant.BOMB_OPEN_STATE;
                 }
             }
         }
@@ -213,35 +199,35 @@ public class MineClearanceView extends View {
     private int calcPieceGrade(int raw, int column) {
         int grade = 0;
         // left_top
-        if (raw != 0 && column != 0 && mPieces[raw - 1][column - 1] == BOMB_STATE) {
+        if (raw != 0 && column != 0 && mPieces[raw - 1][column - 1] == MineClearanceConstant.BOMB_STATE) {
             grade++;
         }
         // top
-        if (column != 0 && mPieces[raw][column - 1] == BOMB_STATE) {
+        if (column != 0 && mPieces[raw][column - 1] == MineClearanceConstant.BOMB_STATE) {
             grade++;
         }
         // right_top
-        if (raw != RAW_BOX - 1 && column != 0 && mPieces[raw + 1][column - 1] == BOMB_STATE) {
+        if (raw != rowCount - 1 && column != 0 && mPieces[raw + 1][column - 1] == MineClearanceConstant.BOMB_STATE) {
             grade++;
         }
         // left
-        if (raw != 0 && mPieces[raw - 1][column] == BOMB_STATE) {
+        if (raw != 0 && mPieces[raw - 1][column] == MineClearanceConstant.BOMB_STATE) {
             grade++;
         }
         // right
-        if (raw != RAW_BOX - 1 && mPieces[raw + 1][column] == BOMB_STATE) {
+        if (raw != rowCount - 1 && mPieces[raw + 1][column] == MineClearanceConstant.BOMB_STATE) {
             grade++;
         }
         // bottom_left
-        if (raw != 0 && column != COLUMN_BOX - 1 && mPieces[raw - 1][column + 1] == BOMB_STATE) {
+        if (raw != 0 && column != columnCount - 1 && mPieces[raw - 1][column + 1] == MineClearanceConstant.BOMB_STATE) {
             grade++;
         }
         //bottom
-        if (column != COLUMN_BOX - 1 && mPieces[raw][column + 1] == BOMB_STATE) {
+        if (column != columnCount - 1 && mPieces[raw][column + 1] == MineClearanceConstant.BOMB_STATE) {
             grade++;
         }
         // bottom_right
-        if (raw != RAW_BOX - 1 && column != COLUMN_BOX - 1 && mPieces[raw + 1][column + 1] == BOMB_STATE) {
+        if (raw != rowCount - 1 && column != columnCount - 1 && mPieces[raw + 1][column + 1] == MineClearanceConstant.BOMB_STATE) {
             grade++;
         }
         return grade;
@@ -253,57 +239,57 @@ public class MineClearanceView extends View {
     private void scanBlankConn(int raw, int column) {
         // left_top
         if (raw != 0 && column != 0 && mPieces[raw - 1][column - 1] >= 0) {
-            mPieces[raw - 1][column - 1] = mPieces[raw - 1][column - 1] == 0 ? ZERO_OPEN_STATE : -mPieces[raw - 1][column - 1];
-            if (mPieces[raw - 1][column - 1] == ZERO_OPEN_STATE) {
+            mPieces[raw - 1][column - 1] = mPieces[raw - 1][column - 1] == 0 ? MineClearanceConstant.ZERO_OPEN_STATE : -mPieces[raw - 1][column - 1];
+            if (mPieces[raw - 1][column - 1] == MineClearanceConstant.ZERO_OPEN_STATE) {
                 scanBlankConn(raw - 1, column - 1);
             }
         }
         // top
         if (column != 0 && mPieces[raw][column - 1] >= 0) {
-            mPieces[raw][column - 1] = mPieces[raw][column - 1] == 0 ? ZERO_OPEN_STATE : -mPieces[raw][column - 1];
-            if (mPieces[raw][column - 1] == ZERO_OPEN_STATE) {
+            mPieces[raw][column - 1] = mPieces[raw][column - 1] == 0 ? MineClearanceConstant.ZERO_OPEN_STATE : -mPieces[raw][column - 1];
+            if (mPieces[raw][column - 1] == MineClearanceConstant.ZERO_OPEN_STATE) {
                 scanBlankConn(raw, column - 1);
             }
         }
         // right_top
-        if (raw != RAW_BOX - 1 && column != 0 && mPieces[raw + 1][column - 1] >= 0) {
-            mPieces[raw + 1][column - 1] = mPieces[raw + 1][column - 1] == 0 ? ZERO_OPEN_STATE : -mPieces[raw + 1][column - 1];
-            if (mPieces[raw + 1][column - 1] == ZERO_OPEN_STATE) {
+        if (raw != rowCount - 1 && column != 0 && mPieces[raw + 1][column - 1] >= 0) {
+            mPieces[raw + 1][column - 1] = mPieces[raw + 1][column - 1] == 0 ? MineClearanceConstant.ZERO_OPEN_STATE : -mPieces[raw + 1][column - 1];
+            if (mPieces[raw + 1][column - 1] == MineClearanceConstant.ZERO_OPEN_STATE) {
                 scanBlankConn(raw + 1, column - 1);
             }
         }
         // left
         if (raw != 0 && mPieces[raw - 1][column] >= 0) {
-            mPieces[raw - 1][column] = mPieces[raw - 1][column] == 0 ? ZERO_OPEN_STATE : -mPieces[raw - 1][column];
-            if (mPieces[raw - 1][column] == ZERO_OPEN_STATE) {
+            mPieces[raw - 1][column] = mPieces[raw - 1][column] == 0 ? MineClearanceConstant.ZERO_OPEN_STATE : -mPieces[raw - 1][column];
+            if (mPieces[raw - 1][column] == MineClearanceConstant.ZERO_OPEN_STATE) {
                 scanBlankConn(raw - 1, column);
             }
         }
         // right
-        if (raw != RAW_BOX - 1 && mPieces[raw + 1][column] >= 0) {
-            mPieces[raw + 1][column] = mPieces[raw + 1][column] == 0 ? ZERO_OPEN_STATE : -mPieces[raw + 1][column];
-            if (mPieces[raw + 1][column] == ZERO_OPEN_STATE) {
+        if (raw != rowCount - 1 && mPieces[raw + 1][column] >= 0) {
+            mPieces[raw + 1][column] = mPieces[raw + 1][column] == 0 ? MineClearanceConstant.ZERO_OPEN_STATE : -mPieces[raw + 1][column];
+            if (mPieces[raw + 1][column] == MineClearanceConstant.ZERO_OPEN_STATE) {
                 scanBlankConn(raw + 1, column);
             }
         }
         // bottom_left
-        if (raw != 0 && column != COLUMN_BOX - 1 && mPieces[raw - 1][column + 1] >= 0) {
-            mPieces[raw - 1][column + 1] = mPieces[raw - 1][column + 1] == 0 ? ZERO_OPEN_STATE : -mPieces[raw - 1][column + 1];
-            if (mPieces[raw - 1][column + 1] == ZERO_OPEN_STATE) {
+        if (raw != 0 && column != columnCount - 1 && mPieces[raw - 1][column + 1] >= 0) {
+            mPieces[raw - 1][column + 1] = mPieces[raw - 1][column + 1] == 0 ? MineClearanceConstant.ZERO_OPEN_STATE : -mPieces[raw - 1][column + 1];
+            if (mPieces[raw - 1][column + 1] == MineClearanceConstant.ZERO_OPEN_STATE) {
                 scanBlankConn(raw - 1, column + 1);
             }
         }
         //bottom
-        if (column != COLUMN_BOX - 1 && mPieces[raw][column + 1] >= 0) {
-            mPieces[raw][column + 1] = mPieces[raw][column + 1] == 0 ? ZERO_OPEN_STATE : -mPieces[raw][column + 1];
-            if (mPieces[raw][column + 1] == ZERO_OPEN_STATE) {
+        if (column != columnCount - 1 && mPieces[raw][column + 1] >= 0) {
+            mPieces[raw][column + 1] = mPieces[raw][column + 1] == 0 ? MineClearanceConstant.ZERO_OPEN_STATE : -mPieces[raw][column + 1];
+            if (mPieces[raw][column + 1] == MineClearanceConstant.ZERO_OPEN_STATE) {
                 scanBlankConn(raw, column + 1);
             }
         }
         // bottom_right
-        if (raw != RAW_BOX - 1 && column != COLUMN_BOX - 1 && mPieces[raw + 1][column + 1] >= 0) {
-            mPieces[raw + 1][column + 1] = mPieces[raw + 1][column + 1] == 0 ? ZERO_OPEN_STATE : -mPieces[raw + 1][column + 1];
-            if (mPieces[raw + 1][column + 1] == ZERO_OPEN_STATE) {
+        if (raw != rowCount - 1 && column != columnCount - 1 && mPieces[raw + 1][column + 1] >= 0) {
+            mPieces[raw + 1][column + 1] = mPieces[raw + 1][column + 1] == 0 ? MineClearanceConstant.ZERO_OPEN_STATE : -mPieces[raw + 1][column + 1];
+            if (mPieces[raw + 1][column + 1] == MineClearanceConstant.ZERO_OPEN_STATE) {
                 scanBlankConn(raw + 1, column + 1);
             }
         }
@@ -311,8 +297,8 @@ public class MineClearanceView extends View {
 
     private void checkWin() {
         int count = 0;
-        for (int i = 0; i < RAW_BOX; i++) {
-            for (int j = 0; j < COLUMN_BOX; j++) {
+        for (int i = 0; i < rowCount; i++) {
+            for (int j = 0; j < columnCount; j++) {
                 if (mPieces[i][j] > 0) {
                     count++;
                 }
@@ -325,7 +311,7 @@ public class MineClearanceView extends View {
             }
         } else {
             if (mMineClearanceListener != null) {
-                mMineClearanceListener.onPieceOpen(count - bombNum, RAW_BOX * COLUMN_BOX);
+                mMineClearanceListener.onPieceOpen(count - bombNum, rowCount * columnCount);
             }
         }
     }
@@ -335,8 +321,8 @@ public class MineClearanceView extends View {
      */
     private int[] getPieceLocation(float x, float y) {
         int[] location = new int[2];
-        location[0] = Math.min((int) Math.floor(x / square), RAW_BOX - 1);
-        location[1] = Math.min((int) Math.floor(y / square), COLUMN_BOX - 1);
+        location[0] = Math.min((int) Math.floor(x / square), rowCount - 1);
+        location[1] = Math.min((int) Math.floor(y / square), columnCount - 1);
         return location;
     }
 
