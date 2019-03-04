@@ -54,6 +54,8 @@ public class MineClearanceView extends View {
 
     private boolean isOverGame;
 
+    private MineClearanceListener mMineClearanceListener;
+
     public MineClearanceView(Context context) {
         super(context);
         init();
@@ -165,6 +167,7 @@ public class MineClearanceView extends View {
             }
         }
 
+        // 洗牌
         List<Integer> randomSeeds = new ArrayList<>(RAW_BOX * COLUMN_BOX);
         for (int i = 0; i < RAW_BOX * COLUMN_BOX; i++) {
             randomSeeds.add(i);
@@ -172,6 +175,7 @@ public class MineClearanceView extends View {
         Collections.shuffle(randomSeeds);
         List<Integer> limitSeeds = new ArrayList<>(randomSeeds.subList(0, bombNum));
         Collections.sort(limitSeeds);
+        // 标记所有棋子
         for (int i = 0; i < bombNum; i++) {
             final int column = limitSeeds.get(i) / RAW_BOX;
             final int raw = limitSeeds.get(i) % RAW_BOX;
@@ -197,7 +201,9 @@ public class MineClearanceView extends View {
                 }
             }
         }
-        Toast.makeText(getContext(), "You failed!", Toast.LENGTH_SHORT).show();
+        if (mMineClearanceListener != null) {
+            mMineClearanceListener.onLoseGame();
+        }
         invalidate();
     }
 
@@ -314,7 +320,13 @@ public class MineClearanceView extends View {
         }
         if (count == bombNum) {
             isOverGame = true;
-            Toast.makeText(getContext(), "You win!", Toast.LENGTH_SHORT).show();
+            if (mMineClearanceListener != null) {
+                mMineClearanceListener.onWinGame();
+            }
+        } else {
+            if (mMineClearanceListener != null) {
+                mMineClearanceListener.onPieceOpen(count - bombNum, RAW_BOX * COLUMN_BOX);
+            }
         }
     }
 
@@ -340,6 +352,9 @@ public class MineClearanceView extends View {
         invalidate();
     }
 
+    public void setMineClearanceListener(MineClearanceListener mineClearanceListener) {
+        this.mMineClearanceListener = mineClearanceListener;
+    }
 
     public int getBombNum() {
         return bombNum;

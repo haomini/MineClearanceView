@@ -6,12 +6,22 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/tv_count_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_normal"
+        android:layout_marginTop="@dimen/margin_normal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="还剩下5个棋子没有翻开" />
+
     <com.haomini.mineclearance.widget.MineClearanceView
         android:id="@+id/mcl_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_normal"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/tv_count_label" />
 
     <TextView
         android:id="@+id/tv_replay"
@@ -32,13 +42,13 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <EditText
-        android:inputType="number"
         android:id="@+id/et_num"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="@dimen/margin_small"
         android:layout_marginEnd="@dimen/margin_small"
         android:hint="请输入雷的个数"
+        android:inputType="number"
         app:layout_constraintBottom_toBottomOf="@id/tv_replay"
         app:layout_constraintEnd_toStartOf="@id/tv_sure"
         app:layout_constraintStart_toEndOf="@id/tv_replay"
