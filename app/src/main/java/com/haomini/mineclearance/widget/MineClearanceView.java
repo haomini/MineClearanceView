@@ -159,7 +159,7 @@ public class MineClearanceView extends View {
             randomSeeds.add(i);
         }
         Collections.shuffle(randomSeeds);
-        List<Integer> limitSeeds = new ArrayList<>(randomSeeds.subList(0, bombNum));
+        List<Integer> limitSeeds = new ArrayList<>(randomSeeds.subList(0, Math.min(bombNum, rowCount * columnCount)));
         Collections.sort(limitSeeds);
         // 标记所有棋子
         for (int i = 0; i < bombNum; i++) {
@@ -333,7 +333,7 @@ public class MineClearanceView extends View {
      */
     public void play(int bombNum) {
         isOverGame = false;
-        this.bombNum = bombNum;
+        this.bombNum = Math.max(0, Math.min(bombNum, rowCount * columnCount));
         init();
         invalidate();
     }
