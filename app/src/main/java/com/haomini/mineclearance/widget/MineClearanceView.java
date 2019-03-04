@@ -54,12 +54,6 @@ public class MineClearanceView extends View {
 
     private boolean isOverGame;
 
-    private int indexOfPic;
-
-    private Bitmap bitmap;
-
-    private boolean isFunGame;
-
     public MineClearanceView(Context context) {
         super(context);
         init();
@@ -78,32 +72,14 @@ public class MineClearanceView extends View {
     private void init() {
         initPieces(bombNum);
 
-        if (isFunGame) {
-            indexOfPic = (int) Math.floor(Math.random() * 3);
-            @DrawableRes int id = R.drawable.chenhe;
-            switch (indexOfPic) {
-                case 0:
-                    id = R.drawable.chenhe;
-                    break;
-                case 1:
-                    id = R.drawable.huangxiaoming;
-                    break;
-                case 2:
-                    id = R.drawable.zhoujielun;
-                    break;
-                default:
-            }
-            bitmap = BitmapFactory.decodeResource(getResources(), id);
-        }
-
         mBoxPaint.setColor(Color.YELLOW);
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        square = (int) Math.floor(getContext().getResources().getDisplayMetrics().widthPixels / (float) RAW_BOX);
+        final int width = getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec);
+        square = (int) Math.floor(width / (float) RAW_BOX);
         setMeasuredDimension(widthMeasureSpec, MeasureSpec.makeMeasureSpec(square * COLUMN_BOX, MeasureSpec.EXACTLY));
     }
 
@@ -112,11 +88,6 @@ public class MineClearanceView extends View {
         super.onDraw(canvas);
 
         float dividerWidth = square / 50.0F + 1;
-
-        if (isFunGame) {
-            mRectF.set(0, 0, getWidth(), getHeight());
-            canvas.drawBitmap(bitmap, null, mRectF, null);
-        }
 
         for (int i = 0; i < RAW_BOX; i++) {
             for (int j = 0; j < COLUMN_BOX; j++) {
@@ -134,7 +105,7 @@ public class MineClearanceView extends View {
                     canvas.drawRect(mRectF, mBoxPaint);
                 } else if (mPieces[i][j] == ZERO_OPEN_STATE) {
                     // 空白打开后
-                    mBoxPaint.setColor(isFunGame ? Color.TRANSPARENT : Color.WHITE);
+                    mBoxPaint.setColor(Color.WHITE);
                     canvas.drawRect(mRectF, mBoxPaint);
                 } else if (mPieces[i][j] < 0 && mPieces[i][j] > BOMB_OPEN_STATE) {
                     // 普通打开后
@@ -347,29 +318,13 @@ public class MineClearanceView extends View {
         }
     }
 
-    public void checkWin(String name) {
-        checkWin();
-        if (name.contains("陈赫") && indexOfPic == 0) {
-            isOverGame = true;
-            Toast.makeText(getContext(), "You win!", Toast.LENGTH_SHORT).show();
-        } else if (name.contains("黄晓明") && indexOfPic == 1) {
-            isOverGame = true;
-            Toast.makeText(getContext(), "You win!", Toast.LENGTH_SHORT).show();
-        } else if (name.contains("周杰伦") && indexOfPic == 2) {
-            isOverGame = true;
-            Toast.makeText(getContext(), "You win!", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(getContext(), "You guess wrong!", Toast.LENGTH_SHORT).show();
-        }
-    }
-
     /**
      * 根据点击位置获取点击的格子
      */
     private int[] getPieceLocation(float x, float y) {
         int[] location = new int[2];
-        location[0] = (int) Math.floor(x / square);
-        location[1] = (int) Math.floor(y / square);
+        location[0] = Math.min((int) Math.floor(x / square), RAW_BOX - 1);
+        location[1] = Math.min((int) Math.floor(y / square), COLUMN_BOX - 1);
         return location;
     }
 
@@ -378,10 +333,9 @@ public class MineClearanceView extends View {
      *
      * @param bombNum 设置炸弹数
      */
-    public void play(int bombNum, boolean isFunGame) {
+    public void play(int bombNum) {
         isOverGame = false;
         this.bombNum = bombNum;
-        this.isFunGame = isFunGame;
         init();
         invalidate();
     }

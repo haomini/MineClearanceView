@@ -14,8 +14,6 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText etBombNum;
 
-    private EditText etName;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,16 +23,12 @@ public class MainActivity extends AppCompatActivity {
 
         etBombNum = findViewById(R.id.et_num);
 
-        etName = findViewById(R.id.et_name);
-
-        final boolean isFunGame = getIntent().getBooleanExtra("boolean", false);
-        mineClearanceView.play(mineClearanceView.getBombNum(), isFunGame);
-        findViewById(R.id.group_fun).setVisibility(isFunGame ? View.VISIBLE : View.GONE);
+        mineClearanceView.play(mineClearanceView.getBombNum());
 
         findViewById(R.id.tv_replay).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mineClearanceView.play(mineClearanceView.getBombNum(), isFunGame);
+                mineClearanceView.play(mineClearanceView.getBombNum());
             }
         });
 
@@ -43,15 +37,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // fixme
                 int count = Integer.parseInt(etBombNum.getText().toString());
-                mineClearanceView.play(count, isFunGame);
+                mineClearanceView.play(count);
             }
         });
 
-        findViewById(R.id.bt_name_sure).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mineClearanceView.checkWin(etName.getText().toString());
-            }
-        });
     }
 }
